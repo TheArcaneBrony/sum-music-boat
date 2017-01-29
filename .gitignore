@@ -87,3 +87,11 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+cache/*
+run_shards.py
+/delete.sh
+.idea
+cache/
+install.sh
+log.json
