@@ -94,3 +94,4 @@ run_shards.py
 cache/
 install.sh
 log.json
+/main.py

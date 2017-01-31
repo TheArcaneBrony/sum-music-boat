@@ -95,10 +95,12 @@ async def extract(url, shuffle=False):
                 extractObj.title = i.get('title')
                 extractObj.description = i.get('description')
 
-            output = await loop.run_in_executor(None, partial(detect, extractObj.title))
-            if output == 'ar':
-                return "ew it's an arab server"
-
+            try:
+                output = await loop.run_in_executor(None, partial(detect, extractObj.title))
+                if output == 'ar':
+                    return "ew it's an arab server"
+            except:
+                pass
             obj_list.append(extractObj)
         else:
             omitted.append(i['title'])

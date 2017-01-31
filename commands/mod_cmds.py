@@ -90,9 +90,13 @@ class Mod(object):
 
     @commands.command(pass_context=True)
     @check(manage_server=True)
-    async def serverprefix(self, ctx, prefix):
+    async def serverprefix(self, ctx, prefix='.'):
         log = self.bot.log
-        log["prefixes"][ctx.message.server.id] = prefix
+        if prefix is '.':
+            del log["prefixes"][ctx.message.server.id]
+            await self.bot.say("resetting prefix")
+        else:
+            log["prefixes"][ctx.message.server.id] = prefix
         with open("log.json", "w") as file:
             json.dump(log, file, indent=4)
         await self.bot.say("changing server prefix to %s" % prefix)

@@ -40,7 +40,7 @@ Advanced cmds that need advanced perms:
 **.kick fgt**: replace ban with kick^
 **.clear**: sends 1000 lines of NULL chars to clear the chat
 **.purge [member] [amount]**: this takes a lot to explain xd. Go to https://www.himebot.xyz for help
-**.serverprefix prefix**: changes the . prefix to the prefix specified. Though you can still execute commands by mentioning the bot or calling its name.
+**.serverprefix [prefix]**: changes the . prefix to the prefix specified. Though you can still execute commands by mentioning the bot or calling its name.
 ''']
 
 INVITE = '''

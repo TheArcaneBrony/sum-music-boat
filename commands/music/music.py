@@ -73,7 +73,7 @@ class Music:
     @role_check()
     async def play(self, ctx, *, song: str):
         state = self.get_voice_state(ctx.message.server)
-        shuffle = "shuffle" in song
+        shuffle = "shuffle" in song.split()[0]
         try:
             summoned_channel = ctx.message.author.voice_channel
             if summoned_channel is None:
@@ -81,7 +81,7 @@ class Music:
                 return
             pattern = re.compile("https*://w{0,3}\.youtube\.com/.+list=\S+")
             if len(pattern.findall(song)) != 0:
-                if ctx.message.server.id not in self.log['playlist_servers']:
+                if ctx.message.server.id not in self.bot.log['playlist_servers']:
                     await self.bot.say(
                         "your server hasn't been registered to be able to play playlists, donate $3 or more to unlock the playlist feature")
                     return
