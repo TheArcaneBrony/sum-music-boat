@@ -66,7 +66,7 @@ else
             if ! ps -p $i >/dev/null; then
                 echo "an error occured, restarting"
                 kill ${PROCESSES[*]}
-                run $1 &>/dev/null
+                run $1
             elif [ "$(check $i)" == "true" ]; then
                 output=$(top -b -n 1 -p $i | tail -n 1 | awk '{print $9;}')
                 echo $i
@@ -75,7 +75,7 @@ else
                 echo "Output $output"
                 echo "a shard went down, restarting"
                 kill ${PROCESSES[*]}
-                run $1 &>/dev/null
+                run $1
             fi
         done
     sleep 100
