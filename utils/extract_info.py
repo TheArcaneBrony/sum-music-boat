@@ -48,7 +48,7 @@ class Extract:
         if len(in_cache) == 0:
             await self.loop.run_in_executor(None, functools.partial(ydl.download, [self.webpage_url]))
 
-async def extract(url, shuffle=False):
+async def extract(url, in_playlist, shuffle=False):
     opts = {
         'default_search': 'auto',
         'force_ipv4': True,
@@ -67,6 +67,9 @@ async def extract(url, shuffle=False):
         info = info["entries"]
     else:
         info = [info]
+
+    if not in_playlist and len(info) > 1:
+        return 1
 
     for i in info:
         if not i['duration'] > 3600:

@@ -5,6 +5,7 @@ import urllib3
 import re
 
 from discord.ext import commands
+from utils import channel_check
 
 HELP = ['''
 options included in [] are optional
@@ -23,7 +24,6 @@ General cmds for fgts:
 **mention me or call my name**: to have a nice chat with me
 **.rule34**: :smirk:
 ''', '''Music cmds:
-you can choose who can execute these commands by adding a role named `himebot_music` in your server. This will make it so that only people with the role can execute these commands, apart from .current and .songlist
 **.play [shuffle *for playlists only*] name of song/url**: play a song with url or song name. Searches on yt for the song if no url not specified. Use this to summon bot aswell.
 **.skip [count]**: vote to skip a song. Skip over *count* songs if count is given
 **.volume 0-100**: change the volume
@@ -32,6 +32,7 @@ you can choose who can execute these commands by adding a role named `himebot_mu
 **.stop**: stops the bot from playing, and makes it leave the channel
 **.current**: shows info about the current song
 **.songlist**: shows all the queued songs to be played
+**.lyrics [song]**: searches for the lyrics of a song on https://genius.com, will use the current playing song if *song* is omitted.
 
 Advanced cmds that need advanced perms:
 **.logging**: enable or disable logging. If enabled, the bot will send server logs to a channel named logs. Logs include: message delete/edit, member join/leave and member ban/unban
@@ -40,7 +41,10 @@ Advanced cmds that need advanced perms:
 **.kick fgt**: replace ban with kick^
 **.clear**: sends 1000 lines of NULL chars to clear the chat
 **.purge [member] [amount]**: this takes a lot to explain xd. Go to https://www.himebot.xyz for help
-**.serverprefix [prefix]**: changes the . prefix to the prefix specified. Though you can still execute commands by mentioning the bot or calling its name.
+**.serverprefix [prefix]**: changes the . prefix to the prefix specified. Though you can still execute commands by mentioning the bot or calling its name
+''', '''Misc stuff:
+**don't want people spamming nsfw stuff?**: simply make a channel named `nsfw`, this will make it so that they can only use nsfw commands in that channel
+**don't want random plebs using music?**: you can choose who can execute music commands by adding a role named `himebot_music` in your server. This will make it so that only people with the role can execute music commands, apart from .current and .songlist
 ''']
 
 INVITE = '''
@@ -278,15 +282,13 @@ class Public:
         await self.bot.say(embed=data)
 
     @commands.command()
+    @channel_check("nsfw")
     async def nudes(self):
         await self.bot.say(random.choice(NUDES))
 
     @commands.command(pass_context=True)
+    @channel_check("nsfw")
     async def rule34(self, ctx, *, term):
-        if 'nsfw' in [i.name.lower() for i in ctx.message.server.channels]:
-            if not ctx.message.channel.name.lower() == 'nsfw':
-                await self.bot.say("you can only use this command in the nsfw channel")
-                return
         future = await self.bot.loop.run_in_executor(None, r34, term.replace(' ', '_'))
         await self.bot.say(future)
 

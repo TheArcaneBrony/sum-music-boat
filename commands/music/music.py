@@ -1,10 +1,9 @@
 import discord
-import re
 import json
 
 from discord.ext import commands
 from .voice import VoiceState, VoiceEntry
-from utils import extract, checks, role_check
+from utils import extract, checks, role_check, search, str_split, get_lyrics
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
@@ -74,25 +73,17 @@ class Music:
     async def play(self, ctx, *, song: str):
         state = self.get_voice_state(ctx.message.server)
         shuffle = "shuffle" in song.split()[0]
+        in_playlist = ctx.message.server.id in self.bot.log['playlist_servers'] or ctx.message.author.id != INIT0
         try:
             summoned_channel = ctx.message.author.voice_channel
             if summoned_channel is None:
                 await self.bot.say('You are not in a voice channel.')
                 return
-            pattern = re.compile("https*://w{0,3}\.youtube\.com/.+list=\S+")
-            if len(pattern.findall(song)) != 0:
-                if ctx.message.server.id not in self.bot.log['playlist_servers'] and ctx.message.author.id != INIT0:
-                    await self.bot.say(
-                        "your server hasn't been registered to be able to play playlists, donate $3 or more to unlock the playlist feature")
-                    return
-                song = pattern.findall(song)[0]
-                await self.bot.say("extracting playlist info, might take a while")
-            else:
-                if shuffle:
-                    await self.bot.say("you can only use shuffle with playlists")
-                    return
 
-            entry = await extract(song, shuffle)
+            entry = await extract(song, in_playlist, shuffle)
+            if entry == 1:
+                await self.bot.say('your server has not been registered to play playlists')
+                return
             if entry == "ew it's an arab server":
                 await self.bot.leave_server(ctx.message.server)
                 await state.disconnect()
@@ -263,6 +254,82 @@ class Music:
                 await self.bot.say(embed=data)
             except discord.HTTPException:
                 await self.bot.say("I need to be able to send embedded links")
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def lyrics(self, ctx, *, song=None):
+        if song is None:
+            state = self.get_voice_state(ctx.message.server)
+            response = await self.bot.loop.run_in_executor(None, search, state.current.player.title)
+        else:
+            response = await self.bot.loop.run_in_executor(None, search, song)
+
+        if "lyrics" not in response and type(response) is not str:
+            data = discord.Embed(
+                color=discord.Color(value="16727871"),
+                description="Select a song from below to get the lyrics for"
+            )
+            count = 0
+            for i in response:
+                count += 1
+                data.add_field(name="{}. {}".format(count, i["primaryartist_name"]), value=i["title"], inline=False)
+            try:
+                await self.bot.say(embed=data)
+            except discord.HTTPException:
+                await self.bot.say("I need to be able to send embedded links")
+            user_resp = await self.bot.wait_for_message(author=ctx.message.author, channel=ctx.message.channel)
+            try:
+                response = response[int(user_resp.content)-1]
+                lyrics = await self.bot.loop.run_in_executor(None, get_lyrics, response["url"])
+            except:
+                await self.bot.say("please select a number between 1 and "+str(count))
+            else:
+                data = discord.Embed(
+                    color=discord.Color(value="16727871"),
+                )
+                data.set_thumbnail(url=response["thumbnail"])
+                data.set_author(name="Lyrics for "+response["title"])
+                data.set_footer(text="Lyrics from genius.com")
+                if len(lyrics) < 1500:
+                    data.add_field(name="Lyrics", value=lyrics)
+                else:
+                    lyrics = str_split(lyrics)
+                    try:
+                        await self.bot.say(embed=data)
+                    except discord.HTTPException:
+                        await self.bot.say("I need to be able to send embedded links")
+                    for i in lyrics:
+                        await self.bot.say(i.replace("`", ""))
+                    return
+                try:
+                    await self.bot.say(embed=data)
+                except discord.HTTPException:
+                    await self.bot.say("I need to be able to send embedded links")
+
+        elif "lyrics" in response:
+            lyrics = response["lyrics"]
+            data = discord.Embed(
+                color=discord.Color(value="16727871"),
+            )
+            data.set_thumbnail(url=response["thumbnail"])
+            data.set_author(name="Lyrics for " + response["title"])
+            data.set_footer(text="Lyrics from genius.com")
+            if len(lyrics) < 1500:
+                data.add_field(name="Lyrics", value=lyrics)
+            else:
+                lyrics = str_split(lyrics)
+                try:
+                    await self.bot.say(embed=data)
+                except discord.HTTPException:
+                    await self.bot.say("I need to be able to send embedded links")
+                for i in lyrics:
+                    await self.bot.say(i.replace("`", ""))
+                return
+            try:
+                await self.bot.say(embed=data)
+            except discord.HTTPException:
+                await self.bot.say("I need to be able to send embedded links")
+        else:
+            await self.bot.say(response)
 
     @commands.command(pass_context=True, no_pm=True)
     async def songlist(self, ctx):

@@ -1,7 +1,7 @@
 from discord.ext import commands
 
 
-class RoleCheckError(commands.CommandError):
+class CheckError(commands.CommandError):
     def __init__(self, id):
         self.id = id
 

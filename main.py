@@ -1,4 +1,5 @@
 import discord
+import sys
 import asyncio
 import xmlrpc.client
 import traceback
@@ -10,19 +11,17 @@ from functools import partial
 from discord.ext import commands
 from utils import str_split
 from cleverbot import Cleverbot
-from utils import RoleCheckError
-
-shard_id = 0
-shard_count = 1
+from utils import CheckError
 
 startup_extensions = ["commands.private", "commands.mod_cmds",
                       "commands.public", "commands.smod_cmds",
                       "commands.music.music", "commands.logging", "commands.repl",
                       "servers", "main_ext"]
 
+
 class Bot(commands.Bot):
     def __init__(self):
-        commands.Bot.__init__(self, shard_id=shard_id, shard_count=shard_count,
+        commands.Bot.__init__(self, shard_id=int(sys.argv[1]), shard_count=int(sys.argv[2]),
                               command_prefix=self.get_prefix)
         self.proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
         self.instances = {}
@@ -118,9 +117,13 @@ class Bot(commands.Bot):
             msg = await self.send_message(channel, "you cannot use that command right now")
             await asyncio.sleep(3)
             await self.delete_message(msg)
-        if isinstance(error, RoleCheckError):
+        if isinstance(error, CheckError):
             if error.id == 'musicError':
                 msg = await self.send_message(channel, "you must have a role named himebot_music in order to use that command")
+                await asyncio.sleep(5)
+                await self.delete_message(msg)
+            elif error.id == "nsfw":
+                msg = await self.send_message(channel, "you can only use this command in the nsfw channel")
                 await asyncio.sleep(5)
                 await self.delete_message(msg)
 
