@@ -97,7 +97,7 @@ class VoiceState:
         # args = 'cache/{}.mp3'.format(entry.display_id)
         await entry.player.download()
         args = glob.glob('cache/{}.*'.format(entry.player.display_id))[0]
-        player = self.voice.create_ffmpeg_player(args, before_options="-loglevel debug -nostdin", options="-vn -b:v 128k", after=self.toggle_next)
+        player = self.voice.create_ffmpeg_player(args, before_options="-nostdin", options="-vn -b:v 128k", after=self.toggle_next)
 
         # TODO: find a way to iterate over this using getattr and setattr
         player.yt = entry.player.yt

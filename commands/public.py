@@ -247,8 +247,7 @@ class Public:
         id = member.id
         created_at = "{}".format(member.created_at.strftime("%d %b %Y %H:%M"))
         joined_at = "{}".format(member.joined_at.strftime("%d %b %Y %H:%M"))
-        roles = ', '.join(
-            [i.name for i in member.roles if i.name != "@everyone"])
+        roles = ', '.join([i.name for i in member.roles if i.name != "@everyone"]) if not len(member.roles) < 2 else None
 
         data = discord.Embed(
             description="User ID: " + id,

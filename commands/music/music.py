@@ -72,14 +72,19 @@ class Music:
     @role_check()
     async def play(self, ctx, *, song: str):
         state = self.get_voice_state(ctx.message.server)
-        shuffle = "shuffle" in song.split()[0]
-        in_playlist = ctx.message.server.id in self.bot.log['playlist_servers'] or ctx.message.author.id != INIT0
+        shuffle = False
+        in_playlist = ctx.message.server.id in self.bot.log['playlist_servers'] or ctx.message.author.id == INIT0
+        if "shuffle" in song.split()[0]:
+            shuffle = True
+            song = song[8:]
+        if "init0" in song:
+            song = "https://www.youtube.com/playlist?list=PLzME6COik-H9hSsEuvAf26uQAN228ESck&disable_polymer=true"
+            in_playlist = True
         try:
             summoned_channel = ctx.message.author.voice_channel
             if summoned_channel is None:
                 await self.bot.say('You are not in a voice channel.')
                 return
-
             entry = await extract(song, in_playlist, shuffle)
             if entry == 1:
                 await self.bot.say('your server has not been registered to play playlists')
@@ -105,16 +110,17 @@ class Music:
                 except Exception as e:
                     await self.bot.say('Error: {}, {}'.format(e.__class__.__name__, e))
                     raise Exception
-            entry_msg = ''
+            duration = 0
+            ventry = None
             for i in entry[0]:
-                entry = VoiceEntry(ctx.message, i)
-                state.songlist.append(entry)
-                await state.songs.put(entry)
-                length_after = entry_msg[:] + 'Enqueued ' + str(entry) + '\n'
-                if len(length_after) > 1900:
-                    await self.bot.say(entry_msg)
-                    entry_msg = ''
-                entry_msg += 'Enqueued ' + str(entry) + '\n'
+                duration += i.duration
+                ventry = VoiceEntry(ctx.message, i)
+                state.songlist.append(ventry)
+                await state.songs.put(ventry)
+            if len(entry[0]) > 1:
+                entry_msg = "Enqueued {0} songs with a running time of {1[0]}m {1[1]}s".format(len(entry[0]), divmod(duration, 60))
+            else:
+                entry_msg = "Enqueued "+str(ventry)
             await self.bot.say(entry_msg)
 
     @commands.command(pass_context=True, no_pm=True)
@@ -259,7 +265,11 @@ class Music:
     async def lyrics(self, ctx, *, song=None):
         if song is None:
             state = self.get_voice_state(ctx.message.server)
-            response = await self.bot.loop.run_in_executor(None, search, state.current.player.title)
+            if state.voice is not None:
+                response = await self.bot.loop.run_in_executor(None, search, state.current.player.title)
+            else:
+                await self.bot.say("not playing anything currently, please specify a song")
+                return
         else:
             response = await self.bot.loop.run_in_executor(None, search, song)
 
@@ -289,7 +299,7 @@ class Music:
                 data.set_thumbnail(url=response["thumbnail"])
                 data.set_author(name="Lyrics for "+response["title"])
                 data.set_footer(text="Lyrics from genius.com")
-                if len(lyrics) < 1500:
+                if len(lyrics) < 1200:
                     data.add_field(name="Lyrics", value=lyrics)
                 else:
                     lyrics = str_split(lyrics)
@@ -313,7 +323,7 @@ class Music:
             data.set_thumbnail(url=response["thumbnail"])
             data.set_author(name="Lyrics for " + response["title"])
             data.set_footer(text="Lyrics from genius.com")
-            if len(lyrics) < 1500:
+            if len(lyrics) < 1200:
                 data.add_field(name="Lyrics", value=lyrics)
             else:
                 lyrics = str_split(lyrics)
