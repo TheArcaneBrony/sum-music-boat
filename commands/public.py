@@ -26,7 +26,6 @@ General cmds for fgts:
 ''', '''Music cmds:
 **.play [shuffle *for playlists only*] name of song/url**: play a song with url or song name. Searches on yt for the song if no url not specified. Use this to summon bot aswell.
 **.skip [count]**: vote to skip a song. Skip over *count* songs if count is given
-**.volume 0-100**: change the volume
 **.pause**: pause the song
 **.resume**: resume the song
 **.stop**: stops the bot from playing, and makes it leave the channel

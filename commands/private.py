@@ -1,7 +1,7 @@
 import discord
 import copy
 import aiohttp
-from utils import subproc, Repl, asyncEval, checks, str_split
+from utils import subproc, AsyncEval, checks, str_split
 
 from discord.ext import commands
 
@@ -10,8 +10,7 @@ class Private:
 
     def __init__(self, bot):
         self.bot = bot
-        self.console = Repl({"bot": self.bot, "self": self})
-        self.evalConsole = asyncEval({"bot": self.bot, "self": self})
+        self.evalConsole = AsyncEval(self.bot.loop, {"bot": self.bot, "self": self})
         self.aiosession = aiohttp.ClientSession()
 
     @commands.command(pass_context=True)
@@ -85,18 +84,6 @@ class Private:
     async def x(self, ctx, *, command):
         result = await subproc(command)
         output = str_split(result)
-        for i in output:
-            await self.bot.say(i)
-
-    @commands.command(pass_context=True)
-    @checks()
-    async def px(self, ctx, *, message: str):
-        """A Python REPL, used for debugging."""
-        self.console.locals.update(
-            {"ctx": ctx, "msg": ctx.message, "server": ctx.message.server})
-        result = await self.console.arun(message)
-        result = str(result)
-        output = str_split(result, lang='python')
         for i in output:
             await self.bot.say(i)
 

@@ -14,7 +14,8 @@ class REPL:
         self.bot = bot
         self.sessions = set()
 
-    def cleanup_code(self, content):
+    @staticmethod
+    def cleanup_code(content):
         """Automatically removes code blocks from the code."""
         # remove ```py\n```
         if content.startswith('```') and content.endswith('```'):
@@ -23,7 +24,8 @@ class REPL:
         # remove `foo`
         return content.strip('` \n')
 
-    def get_syntax_error(self, e):
+    @staticmethod
+    def get_syntax_error(e):
         return '```py\n{0.text}{1:>{0.offset}}\n{2}: {0}```'.format(e, '^', type(e).__name__)
 
     @commands.command(pass_context=True, hidden=True)

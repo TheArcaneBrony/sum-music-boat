@@ -85,7 +85,7 @@ class Music:
             if summoned_channel is None:
                 await self.bot.say('You are not in a voice channel.')
                 return
-            entry = await extract(song, in_playlist, shuffle)
+            entry = await extract(song, self.bot.loop, in_playlist, shuffle)
             if entry == 1:
                 await self.bot.say('your server has not been registered to play playlists')
                 return
@@ -116,26 +116,12 @@ class Music:
                 duration += i.duration
                 ventry = VoiceEntry(ctx.message, i)
                 state.songlist.append(ventry)
-                await state.songs.put(ventry)
             if len(entry[0]) > 1:
                 entry_msg = "Enqueued {0} songs with a running time of {1[0]}m {1[1]}s".format(len(entry[0]), divmod(duration, 60))
             else:
                 entry_msg = "Enqueued "+str(ventry)
             await self.bot.say(entry_msg)
-
-    @commands.command(pass_context=True, no_pm=True)
-    @role_check()
-    async def volume(self, ctx, value: int):
-        """Sets the volume of the currently playing song."""
-
-        if value > 100:
-            await self.bot.say('select a value between 0-100 pls')
-            return
-        state = self.get_voice_state(ctx.message.server)
-        if state.is_playing():
-            player = state.player
-            player.volume = state.volume = value / 100
-            await self.bot.say('Set the volume to {:.0%}'.format(player.volume))
+            state.start()
 
     @commands.command(pass_context=True, no_pm=True)
     @role_check()
@@ -354,7 +340,7 @@ class Music:
             return
         for i in state.songlist:
             data.add_field(name="{}. {}".format(state.songlist.index(
-                i) + 1, i.player.title), value="Skip count: {}/{}".format(skip_count, state.votes_needed))
+                i) + 1, i.player.title), value="Skip count: {}/{}".format(skip_count, state.votes_needed), inline=False)
         try:
             await self.bot.say(embed=data)
         except discord.HTTPException:

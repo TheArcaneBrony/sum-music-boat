@@ -11,11 +11,17 @@ _exit() {
 }
 
 run() {
-    echo "running rpc server with a PID of $rpc"
-    for (( i=0; i<$1; i++ )); do
-        python3.5 main.py $i $1 &
-        PROCESSES[$i]=$!
+    if [[ -z $2 ]]; then
+        count=$1
+    else
+        count=$2
+    fi
+    for (( i=0; i<$count; i++ )); do
+        pair=":python3.5 main.py $i $1"
+        python3.5 main.py $i $1 &>/dev/null &
+        PROCESSES[$i]="$!$pair"
         echo "running shard $i with PID of $!"
+        echo "${PROCESSES[@]}"
     done
 }
 
@@ -58,24 +64,34 @@ if [[ -z $1 ]]; then
         sleep 2
     done
 else
-    run $1
+    count=0
+    if [[ -z $2 ]]; then
+        count=$1
+        run $count
+    else
+        count=$2
+        run $1 $count
+    fi
     python3.5 rpc_server.py &>/dev/null &
     rpc=$!
     while :; do
-        for i in ${PROCESSES[@]}; do
-            if ! ps -p $i >/dev/null; then
+        for (( i=0; i<$count; i++ )); do
+            current=${PROCESSES[$i]}
+            KEY="${current%%:*}"
+            VALUE="${current##*:}"
+            if ! ps -p $KEY >/dev/null; then
                 echo "an error occured, restarting"
-                kill ${PROCESSES[*]}
-                run $1
-            elif [ "$(check $i)" == "true" ]; then
+                kill $KEY
+                $VALUE &
+                PROCESSES[$i]="$!:$VALUE"
+            elif [ "$(check $KEY)" == "true" ]; then
                 output=$(top -b -n 1 -p $i | tail -n 1 | awk '{print $9;}')
-                echo $i
-                echo "output $output"
                 output=${output%%.*}
                 echo "Output $output"
                 echo "a shard went down, restarting"
                 kill ${PROCESSES[*]}
-                run $1
+                $VALUE &
+                PROCESSES[$i]="$!:$VALUE"
             fi
         done
     sleep 100

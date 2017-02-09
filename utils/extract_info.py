@@ -1,19 +1,16 @@
 import youtube_dl
 import functools
-import asyncio
 import glob
 import random
 
 from langdetect import detect
 from functools import partial
 
-loop = asyncio.get_event_loop()
-
 
 class Extract:
 
-    def __init__(self):
-        self.loop = asyncio.get_event_loop()
+    def __init__(self, loop):
+        self.loop = loop
         self.info = None
         self.title = None
         self.url = None
@@ -40,22 +37,22 @@ class Extract:
             "playlist_end": "0",
             "noplaylist": True,
             "outtmpl": 'cache/%(id)s.%(ext)s',
-            "quiet": True,
-            "no_warnings": True
+            "no_warnings": True,
+            "quiet": True
         }
         ydl = youtube_dl.YoutubeDL(opts)
         in_cache = glob.glob("cache/{}.*".format(self.info['display_id']))
         if len(in_cache) == 0:
             await self.loop.run_in_executor(None, functools.partial(ydl.download, [self.webpage_url]))
 
-async def extract(url, in_playlist, shuffle=False):
+async def extract(url, loop, in_playlist, shuffle=False):
     opts = {
         'default_search': 'auto',
         'force_ipv4': True,
         'source_address': '0.0.0.0',
         'playlistend': 50,
-        "quiet": True,
-        "no_warnings": True
+        "no_warnings": True,
+        "quiet": True
     }
     obj_list = []
     omitted = []
@@ -73,7 +70,7 @@ async def extract(url, in_playlist, shuffle=False):
 
     for i in info:
         if not i['duration'] > 3600:
-            extractObj = Extract()
+            extractObj = Extract(loop)
             extractObj.info = i
 
             extractObj.url = url

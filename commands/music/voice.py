@@ -1,6 +1,7 @@
 import asyncio
 import glob
 import discord
+import traceback
 
 
 class VoiceEntry:
@@ -40,17 +41,15 @@ class VoiceEntry:
 class VoiceState:
     def __init__(self, server, bot, cog):
         self.server = server
-        self.volume = 0.6
         self.stop = False
         self.current = None
         self.voice = None
         self.bot = bot
         self.cog = cog
-        self.play_next_song = asyncio.Event()
-        self.songs = asyncio.Queue()
         self.songlist = []
         self.skip_votes = {0: []}
-        self.audio_player = self.bot.loop.create_task(self.audio_player_task())
+        self.blocking_call = asyncio.Event()
+        self.audio_player = None
 
     @property
     def votes_needed(self):
@@ -76,30 +75,56 @@ class VoiceState:
         if self.is_playing():
             self.player.stop()
 
-        for i in range(count):
-            await self.songs.get()
-
-    def toggle_next(self):
-        self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
+    def safe_after(self):
+        try:
+            coro = self.audio_player()  # self.bot.send_message(self.current.channel, "done playing")
+            fut = asyncio.run_coroutine_threadsafe(coro, self.bot.loop)
+            fut.result(0)
+            return
+        except Exception as e:
+            pass  # traceback.print_tb(e.__traceback__)
 
     async def disconnect(self):
-        if self.player is not None:
-            self.player.stop()
         await self.voice.disconnect()
-        self.audio_player.cancel()
         try:
             del self.cog.voice_states[self.server.id]
         except:
             pass
 
+    def unblock(self):
+        self.bot.loop.call_soon_threadsafe(self.blocking_call.set)
+
+    async def audio_player_task(self):
+        while True:
+            self.current = self.songlist.pop(0)
+            self.current.player = await self.create_player()
+            try:
+                if not self.stop:
+                    await self.bot.send_message(self.current.channel, "Now playing")
+                    await self.bot.send_message(self.current.channel, embed=self.current.embed())
+            except discord.HTTPException:
+                try:
+                    await self.bot.send_message(self.current.channel, embed=self.current)
+                except:
+                    pass
+            self.blocking_call.clear()
+            self.current.player.start()
+            await self.blocking_call.wait()
+            if len(self.songlist) == 0:
+                await self.disconnect()
+            elif len(self.voice.channel.voice_members) < 2:
+                if self.current.requester.voice_channel is not None:
+                    await self.voice.move_to(self.current.requester.voice_channel)
+                else:
+                    await self.disconnect()
+
     async def create_player(self):
         entry = self.current
-        # args = 'cache/{}.mp3'.format(entry.display_id)
         await entry.player.download()
         args = glob.glob('cache/{}.*'.format(entry.player.display_id))[0]
-        player = self.voice.create_ffmpeg_player(args, before_options="-nostdin", options="-vn -b:v 128k", after=self.toggle_next)
+        player = self.voice.create_ffmpeg_player(args, before_options="-nostdin", options="-vn -b:a 128k",
+                                                 after=self.unblock)
 
-        # TODO: find a way to iterate over this using getattr and setattr
         player.yt = entry.player.yt
         player.title = entry.player.title
         player.display_id = entry.player.display_id
@@ -115,28 +140,6 @@ class VoiceState:
 
         return player
 
-    async def audio_player_task(self):
-        while True:
-            self.current = await self.songs.get()
-            self.current.player = await self.create_player()
-            self.play_next_song.clear()
-            try:
-                if not self.stop:
-                    await self.bot.send_message(self.current.channel, "Now playing")
-                    await self.bot.send_message(self.current.channel, embed=self.current.embed())
-                self.songlist.pop(0)
-            except:
-                pass
-            self.current.player.volume = self.volume
-            self.current.player.start()
-            await self.play_next_song.wait()
-            if not self.songs.empty() or len(self.voice.channel.voice_members) < 2:
-                if self.current.requester.voice_channel is not None:
-                    await self.voice.move_to(self.current.requester.voice_channel)
-                else:
-                    await self.disconnect()
-                    return
-            else:
-                await self.disconnect()
-                return
-
+    def start(self):
+        if not self.is_playing():
+            self.audio_player = self.bot.loop.create_task(self.audio_player_task())
