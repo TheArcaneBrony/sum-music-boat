@@ -110,7 +110,9 @@ class VoiceState:
             self.blocking_call.clear()
             self.current.player.start()
             await self.blocking_call.wait()
-            if len(self.songlist) == 0:
+            if self.stop:
+                await self.disconnect()
+            elif len(self.songlist) == 0:
                 await self.disconnect()
             elif len(self.voice.channel.voice_members) < 2:
                 if self.current.requester.voice_channel is not None:

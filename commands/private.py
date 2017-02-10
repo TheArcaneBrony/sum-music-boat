@@ -10,7 +10,7 @@ class Private:
 
     def __init__(self, bot):
         self.bot = bot
-        self.evalConsole = AsyncEval(self.bot.loop, {"bot": self.bot, "self": self})
+        self.evalConsole = AsyncEval(self.bot.loop, {"bot": self.bot, "self": self}, self.bot.thread_pool)
         self.aiosession = aiohttp.ClientSession()
 
     @commands.command(pass_context=True)

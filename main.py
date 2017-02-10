@@ -1,5 +1,5 @@
 import discord
-import sys
+import aiohttp
 import asyncio
 import xmlrpc.client
 import traceback
@@ -12,30 +12,55 @@ from discord.ext import commands
 from utils import str_split
 from cleverbot import Cleverbot
 from utils import CheckError
+from concurrent.futures import ThreadPoolExecutor
 
-startup_extensions = ["commands.private", "commands.mod_cmds",
-                      "commands.public", "commands.smod_cmds",
-                      "commands.music.music", "commands.logging", "commands.repl",
-                      "servers", "main_ext"]
+startup_extensions = ['commands.private', 'commands.mod_cmds',
+                      'commands.public', 'commands.smod_cmds',
+                      'commands.music.music', 'commands.logging',
+                      'commands.repl', 'main_ext']
+session = aiohttp.ClientSession()
+
+
+async def update(bot):
+    payload = json.dumps({
+        'shard_id': bot.shard_id,
+        'shard_count': bot.shard_count,
+        'server_count': len(bot.servers)
+    })
+    payload2 = {
+        'token': 'iAJ9cq7Lv4',
+        'servers': bot.get_cfg()['servers']
+    }
+    headers = {
+        'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiIyMTY4NDcxMzMxOTY2ODEyMTciLCJyYW5kIjo4NzMsImlhdCI6MTQ3ODQzMzY2N30.x-iXS4JEWPuGEp83VTau1jKCEcgY6jG_CswR9uoOceI',
+        'content-type': 'application/json'
+    }
+    await session.post('https://bots.discord.pw/api/bots/{0}/stats'.format(
+        bot.user.id), data=payload, headers=headers)
+    await session.post('https://bots.discordlist.net/api.php', data=payload2)
 
 
 class Bot(commands.Bot):
     def __init__(self):
-        commands.Bot.__init__(self, shard_id=int(sys.argv[1]), shard_count=int(sys.argv[2]),
+        commands.Bot.__init__(self, #shard_id=int(sys.argv[1]), shard_count=int(sys.argv[2]),
                               command_prefix=self.get_prefix)
-        self.proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
+        self.proxy = xmlrpc.client.ServerProxy('http://localhost:8000/')
         self.instances = {}
         self.uptime = time.time()
+        self.thread_pool = ThreadPoolExecutor(max_workers=4)
 
     @property
     def log(self):
-        return json.load(open('log.json'))
+        with open('log.json') as f:
+            data = json.load(f)
+            f.close()
+            return data
 
     def get_prefix(self, bot, message):
-        default = [",", "hime ", "Hime ", "himebot ", "Himebot ", commands.when_mentioned(bot, message)]
+        default = [',', 'hime ', 'Hime ', 'himebot ', 'Himebot ', commands.when_mentioned(bot, message)]
         if message.channel.is_private:
             return default
-        if message.server.id in self.log["prefixes"]:
+        if message.server.id in self.log['prefixes']:
             return [self.log['prefixes'][message.server.id]] + default[1:]
         return default
 
@@ -55,6 +80,8 @@ class Bot(commands.Bot):
                     self.leave_server(i)
             except:
                 pass
+        await update(self)
+        self.loop.run_in_executor(None, session.close)
         while 1:
             self.push_cfg()
             await asyncio.sleep(30)
@@ -82,7 +109,7 @@ class Bot(commands.Bot):
             msg = msg.replace('<@232916519594491906>', 'hime')
         if 'hime' in msg:
             if message.author.id not in self.instances.keys():
-                future = self.loop.run_in_executor(None, partial(Cleverbot, "himebot"))
+                future = self.loop.run_in_executor(None, partial(Cleverbot, 'himebot'))
                 self.instances[message.author.id] = await future
 
             question = msg.split(' ', 1)[1] if msg.startswith('hime') else msg
@@ -109,42 +136,42 @@ class Bot(commands.Bot):
             await asyncio.sleep(3)
             await self.delete_message(msg)
         if isinstance(error, commands.NoPrivateMessage):
-            msg = await self.send_message(channel, "that command is not "
-                                                   "available in DMs.")
+            msg = await self.send_message(channel, 'that command is not '
+                                                   'available in DMs.')
             await asyncio.sleep(3)
             await self.delete_message(msg)
         if isinstance(error, commands.CommandOnCooldown):
-            msg = await self.send_message(channel, "you cannot use that command right now")
+            msg = await self.send_message(channel, 'you cannot use that command right now')
             await asyncio.sleep(3)
             await self.delete_message(msg)
         if isinstance(error, CheckError):
             if error.id == 'musicError':
-                msg = await self.send_message(channel, "you must have a role named himebot_music in order to use that command")
+                msg = await self.send_message(channel, 'you must have a role named himebot_music in order to use that command')
                 await asyncio.sleep(5)
                 await self.delete_message(msg)
-            elif error.id == "nsfw":
-                msg = await self.send_message(channel, "you can only use this command in the nsfw channel")
+            elif error.id == 'nsfw':
+                msg = await self.send_message(channel, 'you can only use this command in the nsfw channel')
                 await asyncio.sleep(5)
                 await self.delete_message(msg)
 
-        for i in self.get_all_channels():
-            if i.id == '232190536231026688':
-                traceback_msg = "".join(
-                    traceback.format_exception(error.__class__.__name__, error, error.__traceback__))
-                output = str_split(traceback_msg)
-                for out in output:
-                    await self.send_message(i, out)
-                await self.send_message(i, 'Origin: {}'.format(ctx.message.server))
+        channel = discord.utils.get(self.get_all_channels(), id='232190536231026688')
+        if channel is not None:
+            traceback_msg = ''''''.join(
+                traceback.format_exception(error.__class__.__name__, error, error.__traceback__))
+            output = str_split(traceback_msg)
+            for out in output:
+                await self.send_message(channel, out)
+            await self.send_message(channel, 'Origin: {}'.format(ctx.message.server))
 
     def get_cfg(self):
         return self.proxy.get_cfg()
 
     def push_cfg(self):
         cfg = {
-            "channels": len([i for i in self.get_all_channels()]),
-            "servers": len(bot.servers),
-            "members": len([i for i in self.get_all_members()]),
-            "playing_on": len([self.cogs['Music'].voice_states[k].current for k in self.cogs[
+            'channels': len([i for i in self.get_all_channels()]),
+            'servers': len(bot.servers),
+            'members': len([i for i in self.get_all_members()]),
+            'playing_on': len([self.cogs['Music'].voice_states[k].current for k in self.cogs[
                 'Music'].voice_states if self.cogs['Music'].voice_states[k].current is not None])
         }
         self.proxy.add_to_cfg(cfg, self.shard_id)

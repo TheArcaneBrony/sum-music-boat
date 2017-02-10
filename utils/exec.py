@@ -4,15 +4,16 @@ import traceback
 
 
 class AsyncEval:
-    def __init__(self, loop, locals=None):
+    def __init__(self, loop, locals=None, thread_pool=None):
         if locals is None:
             locals = {"__name__": "__console__", "__doc__": None}
 
         self.locals = locals
         self.loop = loop
+        self.thread_pool = thread_pool
 
     async def run(self, data):
-        future = self.loop.run_in_executor(None, eval, data, self.locals)
+        future = self.loop.run_in_executor(self.thread_pool, eval, data, self.locals)
         try:
             response = await future
             

@@ -80,7 +80,7 @@ else
             KEY="${current%%:*}"
             VALUE="${current##*:}"
             if ! ps -p $KEY >/dev/null; then
-                echo "an error occured, restarting"
+                echo "an error occured, restarting, $VALUE"
                 kill $KEY
                 $VALUE &
                 PROCESSES[$i]="$!:$VALUE"
@@ -88,7 +88,7 @@ else
                 output=$(top -b -n 1 -p $i | tail -n 1 | awk '{print $9;}')
                 output=${output%%.*}
                 echo "Output $output"
-                echo "a shard went down, restarting"
+                echo "a shard went down, restarting, $VALUE"
                 kill ${PROCESSES[*]}
                 $VALUE &
                 PROCESSES[$i]="$!:$VALUE"

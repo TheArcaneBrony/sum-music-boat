@@ -9,8 +9,9 @@ from functools import partial
 
 class Extract:
 
-    def __init__(self, loop):
+    def __init__(self, loop, thread_pool=None):
         self.loop = loop
+        self.thread_pool = thread_pool
         self.info = None
         self.title = None
         self.url = None
@@ -43,9 +44,9 @@ class Extract:
         ydl = youtube_dl.YoutubeDL(opts)
         in_cache = glob.glob("cache/{}.*".format(self.info['display_id']))
         if len(in_cache) == 0:
-            await self.loop.run_in_executor(None, functools.partial(ydl.download, [self.webpage_url]))
+            await self.loop.run_in_executor(self.thread_pool, functools.partial(ydl.download, [self.webpage_url]))
 
-async def extract(url, loop, in_playlist, shuffle=False):
+async def extract(url, loop, in_playlist, shuffle=False, thread_pool=None):
     opts = {
         'default_search': 'auto',
         'force_ipv4': True,
@@ -58,7 +59,7 @@ async def extract(url, loop, in_playlist, shuffle=False):
     omitted = []
     ydl = youtube_dl.YoutubeDL(opts)
     func = functools.partial(ydl.extract_info, url, download=False)
-    info = await loop.run_in_executor(None, func)
+    info = await loop.run_in_executor(thread_pool, func)
 
     if "entries" in info:
         info = info["entries"]
@@ -70,38 +71,38 @@ async def extract(url, loop, in_playlist, shuffle=False):
 
     for i in info:
         if not i['duration'] > 3600:
-            extractObj = Extract(loop)
-            extractObj.info = i
+            extract_obj = Extract(loop, thread_pool)
+            extract_obj.info = i
 
-            extractObj.url = url
-            extractObj.yt = ydl
-            extractObj.display_id = i.get('display_id')
-            extractObj.thumbnail = i.get('thumbnail')
-            extractObj.webpage_url = i.get('webpage_url')
-            extractObj.download_url = i.get('download_url')
-            extractObj.views = i.get('view_count')
-            extractObj.is_live = bool(i.get('is_live'))
-            extractObj.likes = i.get('like_count')
-            extractObj.dislikes = i.get('dislike_count')
-            extractObj.duration = i.get('duration')
-            extractObj.uploader = i.get('uploader')
+            extract_obj.url = url
+            extract_obj.yt = ydl
+            extract_obj.display_id = i.get('display_id')
+            extract_obj.thumbnail = i.get('thumbnail')
+            extract_obj.webpage_url = i.get('webpage_url')
+            extract_obj.download_url = i.get('download_url')
+            extract_obj.views = i.get('view_count')
+            extract_obj.is_live = bool(i.get('is_live'))
+            extract_obj.likes = i.get('like_count')
+            extract_obj.dislikes = i.get('dislike_count')
+            extract_obj.duration = i.get('duration')
+            extract_obj.uploader = i.get('uploader')
 
             is_twitch = 'twitch' in url
             if is_twitch:
                 # twitch has 'title' and 'description' sort of mixed up.
-                extractObj.title = i.get('description')
-                extractObj.description = None
+                extract_obj.title = i.get('description')
+                extract_obj.description = None
             else:
-                extractObj.title = i.get('title')
-                extractObj.description = i.get('description')
+                extract_obj.title = i.get('title')
+                extract_obj.description = i.get('description')
 
             try:
-                output = await loop.run_in_executor(None, partial(detect, extractObj.title))
+                output = await loop.run_in_executor(thread_pool, partial(detect, extract_obj.title))
                 if output == 'ar':
                     return "ew it's an arab server"
             except:
                 pass
-            obj_list.append(extractObj)
+            obj_list.append(extract_obj)
         else:
             omitted.append(i['title'])
 

@@ -85,7 +85,9 @@ class Music:
             if summoned_channel is None:
                 await self.bot.say('You are not in a voice channel.')
                 return
-            entry = await extract(song, self.bot.loop, in_playlist, shuffle)
+            ##
+            entry = await extract(song, self.bot.loop, in_playlist, shuffle, self.bot.thread_pool)
+            ##
             if entry == 1:
                 await self.bot.say('your server has not been registered to play playlists')
                 return
@@ -252,12 +254,12 @@ class Music:
         if song is None:
             state = self.get_voice_state(ctx.message.server)
             if state.voice is not None:
-                response = await self.bot.loop.run_in_executor(None, search, state.current.player.title)
+                response = await self.bot.loop.run_in_executor(self.bot.thread_pool, search, state.current.player.title)
             else:
                 await self.bot.say("not playing anything currently, please specify a song")
                 return
         else:
-            response = await self.bot.loop.run_in_executor(None, search, song)
+            response = await self.bot.loop.run_in_executor(self.bot.thread_pool, search, song)
 
         if "lyrics" not in response and type(response) is not str:
             data = discord.Embed(
@@ -275,7 +277,7 @@ class Music:
             user_resp = await self.bot.wait_for_message(author=ctx.message.author, channel=ctx.message.channel)
             try:
                 response = response[int(user_resp.content)-1]
-                lyrics = await self.bot.loop.run_in_executor(None, get_lyrics, response["url"])
+                lyrics = await self.bot.loop.run_in_executor(self.bot.thread_pool, get_lyrics, response["url"])
             except:
                 await self.bot.say("please select a number between 1 and "+str(count))
             else:
@@ -330,7 +332,6 @@ class Music:
     @commands.command(pass_context=True, no_pm=True)
     async def songlist(self, ctx):
         state = self.get_voice_state(ctx.message.server)
-        skip_count = len(state.skip_votes[0])
         data = discord.Embed(
             color=discord.Color(value="16727871"),
             title="Songs up next"
@@ -340,7 +341,7 @@ class Music:
             return
         for i in state.songlist:
             data.add_field(name="{}. {}".format(state.songlist.index(
-                i) + 1, i.player.title), value="Skip count: {}/{}".format(skip_count, state.votes_needed), inline=False)
+                i) + 1, i.player.title), value="Duration: {}".format(i.player.duration), inline=False)
         try:
             await self.bot.say(embed=data)
         except discord.HTTPException:
