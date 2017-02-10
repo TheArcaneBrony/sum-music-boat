@@ -34,15 +34,15 @@ class Extract:
             'default_search': 'auto',
             'force_ipv4': True,
             'source_address': '0.0.0.0',
-            "playlist_items": "0",
-            "playlist_end": "0",
-            "noplaylist": True,
-            "outtmpl": 'cache/%(id)s.%(ext)s',
-            "no_warnings": True,
-            "quiet": True
+            'playlist_items': '0',
+            'playlist_end': '0',
+            'noplaylist': True,
+            'outtmpl': 'cache/%(id)s.%(ext)s',
+            'no_warnings': True,
+            'quiet': True
         }
         ydl = youtube_dl.YoutubeDL(opts)
-        in_cache = glob.glob("cache/{}.*".format(self.info['display_id']))
+        in_cache = glob.glob('cache/{}.*'.format(self.info['display_id']))
         if len(in_cache) == 0:
             await self.loop.run_in_executor(self.thread_pool, functools.partial(ydl.download, [self.webpage_url]))
 
@@ -52,8 +52,8 @@ async def extract(url, loop, in_playlist, shuffle=False, thread_pool=None):
         'force_ipv4': True,
         'source_address': '0.0.0.0',
         'playlistend': 50,
-        "no_warnings": True,
-        "quiet": True
+        'no_warnings': True,
+        'quiet': True
     }
     obj_list = []
     omitted = []
@@ -61,8 +61,8 @@ async def extract(url, loop, in_playlist, shuffle=False, thread_pool=None):
     func = functools.partial(ydl.extract_info, url, download=False)
     info = await loop.run_in_executor(thread_pool, func)
 
-    if "entries" in info:
-        info = info["entries"]
+    if 'entries' in info:
+        info = info['entries']
     else:
         info = [info]
 
@@ -99,7 +99,7 @@ async def extract(url, loop, in_playlist, shuffle=False, thread_pool=None):
             try:
                 output = await loop.run_in_executor(thread_pool, partial(detect, extract_obj.title))
                 if output == 'ar':
-                    return "ew it's an arab server"
+                    return 'ew it\'s an arab server'
             except:
                 pass
             obj_list.append(extract_obj)

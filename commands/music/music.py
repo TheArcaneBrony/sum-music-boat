@@ -12,9 +12,6 @@ INIT0 = '205346839082303488'
 
 
 class Music:
-    """Voice related commands.
-    Works in multiple servers at once.
-    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -43,7 +40,7 @@ class Music:
                 pass
 
     async def summon(self, ctx):
-        """Summons the bot to join your voice channel."""
+        '''Summons the bot to join your voice channel.'''
         state = self.get_voice_state(ctx.message.server)
         if state.voice is None:
             try:
@@ -59,14 +56,14 @@ class Music:
     async def playlistadd(self, ctx, *, server_id):
         _id = server_id if server_id is not None else ctx.message.server.id
         log = self.bot.log
-        if _id not in log["playlist_servers"]:
-            log["playlist_servers"].append(_id)
+        if _id not in log['playlist_servers']:
+            log['playlist_servers'].append(_id)
         else:
-            await self.bot.say("this server is already in the list")
+            await self.bot.say('this server is already in the list')
             return
-        with open("log.json", "w") as file:
+        with open('log.json', 'w') as file:
             json.dump(log, file, indent=4)
-        await self.bot.say("adding %s to playlist servers" % (ctx.message.server.name if server_id is None else _id))
+        await self.bot.say('adding %s to playlist servers' % (ctx.message.server.name if server_id is None else _id))
 
     @commands.command(pass_context=True, no_pm=True)
     @role_check()
@@ -74,11 +71,11 @@ class Music:
         state = self.get_voice_state(ctx.message.server)
         shuffle = False
         in_playlist = ctx.message.server.id in self.bot.log['playlist_servers'] or ctx.message.author.id == INIT0
-        if "shuffle" in song.split()[0]:
+        if 'shuffle' in song.split()[0]:
             shuffle = True
             song = song[8:]
-        if "init0" in song:
-            song = "https://www.youtube.com/playlist?list=PLzME6COik-H9hSsEuvAf26uQAN228ESck&disable_polymer=true"
+        if 'init0' in song:
+            song = 'https://www.youtube.com/playlist?list=PLzME6COik-H9hSsEuvAf26uQAN228ESck&disable_polymer=true'
             in_playlist = True
         try:
             summoned_channel = ctx.message.author.voice_channel
@@ -91,13 +88,13 @@ class Music:
             if entry == 1:
                 await self.bot.say('your server has not been registered to play playlists')
                 return
-            if entry == "ew it's an arab server":
+            if entry == 'ew it\'s an arab server':
                 await self.bot.leave_server(ctx.message.server)
                 await state.disconnect()
                 return
             if entry[1]:
                 await self.bot.say('some songs have been omitted due to duration, the omitted titles are')
-                await self.bot.say("\n".join(entry[1]))
+                await self.bot.say('\n'.join(entry[1]))
             if len(entry[0]) < 1:
                 return
         except Exception as e:
@@ -119,9 +116,9 @@ class Music:
                 ventry = VoiceEntry(ctx.message, i)
                 state.songlist.append(ventry)
             if len(entry[0]) > 1:
-                entry_msg = "Enqueued {0} songs with a running time of {1[0]}m {1[1]}s".format(len(entry[0]), divmod(duration, 60))
+                entry_msg = 'Enqueued {0} songs with a running time of {1[0]}m {1[1]}s'.format(len(entry[0]), divmod(duration, 60))
             else:
-                entry_msg = "Enqueued "+str(ventry)
+                entry_msg = 'Enqueued '+str(ventry)
             await self.bot.say(entry_msg)
             state.start()
 
@@ -160,7 +157,7 @@ class Music:
             return
 
         if state.current.requester.id == INIT0 and ctx.message.author.id != INIT0:
-            await self.bot.say("nah this song is good")
+            await self.bot.say('nah this song is good')
             return
 
         if ctx.message.author.server_permissions.mute_members or 'himebot_music' in [i.name for i in
@@ -182,9 +179,6 @@ class Music:
     @commands.command(pass_context=True, no_pm=True)
     @role_check()
     async def skip(self, ctx, count=0):
-        """Vote to skip a song. The song requester can automatically skip.
-        3 skip votes are needed for the song to be skipped.
-        """
 
         if count < 0:
             await self.bot.say('skip count needs to be greater than, or 0')
@@ -243,11 +237,11 @@ class Music:
         else:
             skip_count = len(state.skip_votes[0])
             data = state.current.embed().add_field(
-                name="Skip count", value="{}/{}".format(skip_count, state.votes_needed))
+                name='Skip count', value='{}/{}'.format(skip_count, state.votes_needed))
             try:
                 await self.bot.say(embed=data)
             except discord.HTTPException:
-                await self.bot.say("I need to be able to send embedded links")
+                await self.bot.say('I need to be able to send embedded links')
 
     @commands.command(pass_context=True, no_pm=True)
     async def lyrics(self, ctx, *, song=None):
@@ -256,76 +250,76 @@ class Music:
             if state.voice is not None:
                 response = await self.bot.loop.run_in_executor(self.bot.thread_pool, search, state.current.player.title)
             else:
-                await self.bot.say("not playing anything currently, please specify a song")
+                await self.bot.say('not playing anything currently, please specify a song')
                 return
         else:
             response = await self.bot.loop.run_in_executor(self.bot.thread_pool, search, song)
 
-        if "lyrics" not in response and type(response) is not str:
+        if 'lyrics' not in response and type(response) is not str:
             data = discord.Embed(
-                color=discord.Color(value="16727871"),
-                description="Select a song from below to get the lyrics for"
+                color=discord.Color(value='16727871'),
+                description='Select a song from below to get the lyrics for'
             )
             count = 0
             for i in response:
                 count += 1
-                data.add_field(name="{}. {}".format(count, i["primaryartist_name"]), value=i["title"], inline=False)
+                data.add_field(name='{}. {}'.format(count, i['primaryartist_name']), value=i['title'], inline=False)
             try:
                 await self.bot.say(embed=data)
             except discord.HTTPException:
-                await self.bot.say("I need to be able to send embedded links")
+                await self.bot.say('I need to be able to send embedded links')
             user_resp = await self.bot.wait_for_message(author=ctx.message.author, channel=ctx.message.channel)
             try:
                 response = response[int(user_resp.content)-1]
-                lyrics = await self.bot.loop.run_in_executor(self.bot.thread_pool, get_lyrics, response["url"])
+                lyrics = await self.bot.loop.run_in_executor(self.bot.thread_pool, get_lyrics, response['url'])
             except:
-                await self.bot.say("please select a number between 1 and "+str(count))
+                await self.bot.say('please select a number between 1 and '+str(count))
             else:
                 data = discord.Embed(
-                    color=discord.Color(value="16727871"),
+                    color=discord.Color(value='16727871'),
                 )
-                data.set_thumbnail(url=response["thumbnail"])
-                data.set_author(name="Lyrics for "+response["title"])
-                data.set_footer(text="Lyrics from genius.com")
+                data.set_thumbnail(url=response['thumbnail'])
+                data.set_author(name='Lyrics for '+response['title'])
+                data.set_footer(text='Lyrics from genius.com')
                 if len(lyrics) < 1200:
-                    data.add_field(name="Lyrics", value=lyrics)
+                    data.add_field(name='Lyrics', value=lyrics)
                 else:
                     lyrics = str_split(lyrics)
                     try:
                         await self.bot.say(embed=data)
                     except discord.HTTPException:
-                        await self.bot.say("I need to be able to send embedded links")
+                        await self.bot.say('I need to be able to send embedded links')
                     for i in lyrics:
-                        await self.bot.say(i.replace("`", ""))
+                        await self.bot.say(i.replace('`', ''))
                     return
                 try:
                     await self.bot.say(embed=data)
                 except discord.HTTPException:
-                    await self.bot.say("I need to be able to send embedded links")
+                    await self.bot.say('I need to be able to send embedded links')
 
-        elif "lyrics" in response:
-            lyrics = response["lyrics"]
+        elif 'lyrics' in response:
+            lyrics = response['lyrics']
             data = discord.Embed(
-                color=discord.Color(value="16727871"),
+                color=discord.Color(value='16727871'),
             )
-            data.set_thumbnail(url=response["thumbnail"])
-            data.set_author(name="Lyrics for " + response["title"])
-            data.set_footer(text="Lyrics from genius.com")
+            data.set_thumbnail(url=response['thumbnail'])
+            data.set_author(name='Lyrics for ' + response['title'])
+            data.set_footer(text='Lyrics from genius.com')
             if len(lyrics) < 1200:
-                data.add_field(name="Lyrics", value=lyrics)
+                data.add_field(name='Lyrics', value=lyrics)
             else:
                 lyrics = str_split(lyrics)
                 try:
                     await self.bot.say(embed=data)
                 except discord.HTTPException:
-                    await self.bot.say("I need to be able to send embedded links")
+                    await self.bot.say('I need to be able to send embedded links')
                 for i in lyrics:
-                    await self.bot.say(i.replace("`", ""))
+                    await self.bot.say(i.replace('`', ''))
                 return
             try:
                 await self.bot.say(embed=data)
             except discord.HTTPException:
-                await self.bot.say("I need to be able to send embedded links")
+                await self.bot.say('I need to be able to send embedded links')
         else:
             await self.bot.say(response)
 
@@ -333,19 +327,19 @@ class Music:
     async def songlist(self, ctx):
         state = self.get_voice_state(ctx.message.server)
         data = discord.Embed(
-            color=discord.Color(value="16727871"),
-            title="Songs up next"
+            color=discord.Color(value='16727871'),
+            title='Songs up next'
         )
         if len(state.songlist) < 1:
-            await self.bot.say("nothing is in the queue currently")
+            await self.bot.say('nothing is in the queue currently')
             return
         for i in state.songlist:
-            data.add_field(name="{}. {}".format(state.songlist.index(
-                i) + 1, i.player.title), value="Duration: {}".format(i.player.duration), inline=False)
+            data.add_field(name='{}. {}'.format(state.songlist.index(
+                i) + 1, i.player.title), value='Duration: {}'.format(i.player.duration), inline=False)
         try:
             await self.bot.say(embed=data)
         except discord.HTTPException:
-            await self.bot.say("I need to be able to send embedded links")
+            await self.bot.say('I need to be able to send embedded links')
 
 
 def setup(bot):

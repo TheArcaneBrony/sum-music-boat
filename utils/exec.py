@@ -6,7 +6,7 @@ import traceback
 class AsyncEval:
     def __init__(self, loop, locals=None, thread_pool=None):
         if locals is None:
-            locals = {"__name__": "__console__", "__doc__": None}
+            locals = {'__name__': '__console__', '__doc__': None}
 
         self.locals = locals
         self.loop = loop

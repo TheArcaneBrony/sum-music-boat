@@ -18,7 +18,7 @@ async def indented_entry_to_code(bot, entries, code='python'):
     await bot.say('\n'.join(output))
 
 
-def str_split(string, lang=""):
+def str_split(string, lang=''):
     if len(string) > 0:
         strings = [string[i:i + 1900] for i in range(0, len(string), 1900)]
         output = []

@@ -10,7 +10,7 @@ class Private:
 
     def __init__(self, bot):
         self.bot = bot
-        self.evalConsole = AsyncEval(self.bot.loop, {"bot": self.bot, "self": self}, self.bot.thread_pool)
+        self.evalConsole = AsyncEval(self.bot.loop, {'bot': self.bot, 'self': self}, self.bot.thread_pool)
         self.aiosession = aiohttp.ClientSession()
 
     @commands.command(pass_context=True)
@@ -90,11 +90,11 @@ class Private:
     @commands.command(pass_context=True)
     @checks()
     async def e(self, ctx, *, message):
-        self.evalConsole.locals.update({"ctx": ctx,
-                                        "msg": ctx.message,
-                                        "ch": ctx.message.channel,
-                                        "server": ctx.message.server,
-                                        "author": ctx.message.author})
+        self.evalConsole.locals.update({'ctx': ctx,
+                                        'msg': ctx.message,
+                                        'ch': ctx.message.channel,
+                                        'server': ctx.message.server,
+                                        'author': ctx.message.author})
         result = await self.evalConsole.run(message)
         result = str(result)
         output = str_split(result, lang='python')
@@ -125,7 +125,7 @@ class Private:
             try:
                 await self.bot.send_message(i, msg)
             except:
-                await self.bot.say("couldn't broadcast to %s" % i.name)
+                await self.bot.say('couldn\'t broadcast to %s' % i.name)
 
     @commands.command(pass_context=True)
     @checks()
@@ -151,9 +151,9 @@ class Private:
         try:
             await self.bot.leave_server(server)
         except Exception as e:
-            await self.bot.send_message(ctx.message.channel, "{}: {}".format(e.__class__.__name__, e))
+            await self.bot.send_message(ctx.message.channel, '{}: {}'.format(e.__class__.__name__, e))
         else:
-            await self.bot.say("left "+server.name)
+            await self.bot.say('left '+server.name)
 
 
 def setup(bot):

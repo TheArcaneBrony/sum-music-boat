@@ -21,20 +21,20 @@ class VoiceEntry:
 
     def embed(self):
         data = discord.Embed(
-            color=discord.Color(value="16727871"),
+            color=discord.Color(value='16727871'),
             description=self.player.webpage_url
         )
         duration = self.player.duration
-        data.add_field(name="Uploaded by", value=self.player.uploader)
-        data.add_field(name="Requested by", value=self.requester.display_name)
+        data.add_field(name='Uploaded by', value=self.player.uploader)
+        data.add_field(name='Requested by', value=self.requester.display_name)
         if duration:
-            data.add_field(name="Duration", value='{0[0]}m {0[1]}s'.format(
+            data.add_field(name='Duration', value='{0[0]}m {0[1]}s'.format(
                 divmod(duration, 60)))
         data.set_author(name=self.player.title, url=self.player.webpage_url)
         data.set_thumbnail(url=self.player.thumbnail)
         data.set_footer(
-            icon_url="https://images.discordapp.net/avatars/232916519594491906/42a9ab560aca4d5cdc50f37e7726005b.jpg",
-            text="donate to hime for playlists and more at himebot.xyz")
+            icon_url='https://images.discordapp.net/avatars/232916519594491906/42a9ab560aca4d5cdc50f37e7726005b.jpg',
+            text='donate to hime for playlists and more at himebot.xyz')
         return data
 
 
@@ -77,7 +77,7 @@ class VoiceState:
 
     def safe_after(self):
         try:
-            coro = self.audio_player()  # self.bot.send_message(self.current.channel, "done playing")
+            coro = self.audio_player()  # self.bot.send_message(self.current.channel, 'done playing')
             fut = asyncio.run_coroutine_threadsafe(coro, self.bot.loop)
             fut.result(0)
             return
@@ -100,7 +100,7 @@ class VoiceState:
             self.current.player = await self.create_player()
             try:
                 if not self.stop:
-                    await self.bot.send_message(self.current.channel, "Now playing")
+                    await self.bot.send_message(self.current.channel, 'Now playing')
                     await self.bot.send_message(self.current.channel, embed=self.current.embed())
             except discord.HTTPException:
                 try:
@@ -124,7 +124,7 @@ class VoiceState:
         entry = self.current
         await entry.player.download()
         args = glob.glob('cache/{}.*'.format(entry.player.display_id))[0]
-        player = self.voice.create_ffmpeg_player(args, before_options="-nostdin", options="-vn -b:a 128k",
+        player = self.voice.create_ffmpeg_player(args, before_options='-nostdin', options='-vn -b:a 128k',
                                                  after=self.unblock)
 
         player.yt = entry.player.yt

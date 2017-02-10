@@ -40,7 +40,7 @@ class Mod(object):
         try:
             await self.bot.purge_from(ctx.message.channel, limit=int(amount), before=ctx.message, check=lambda e: member is None or e.author == member)
         except ValueError:
-            await self.bot.say("wtf that's not an int")
+            await self.bot.say('wtf that\'s not an int')
         except TypeError:
             await self.bot.say('did you tag the fgt you wanna purge from?')
         except discord.errors.Forbidden:
@@ -50,25 +50,25 @@ class Mod(object):
     @check(manage_messages=True)
     async def clear(self):
         try:
-            await self.bot.say("\0\n" * 1000)
+            await self.bot.say('\0\n' * 1000)
         except:
             pass
 
     @commands.command(pass_context=True)
     @check(ban_members=True)
     async def ban(self, ctx, *, member: discord.Member=None):
-        """Bans a member from the server.
+        '''Bans a member from the server.
         In order for this to work, the bot must have Ban Member permissions.
         To use this command you must have Ban Members permission or have the
         Bot Admin role.
-        """
+        '''
 
         try:
             await self.bot.ban(member)
         except discord.Forbidden:
-            await self.bot.say("bot ain't got perms yo")
+            await self.bot.say('bot ain\'t got perms yo')
         except discord.HTTPException:
-            await self.bot.say("fgt didn't get banned")
+            await self.bot.say('fgt didn\'t get banned')
         except AttributeError:
             await self.bot.say('which fgt to ban??')
         else:
@@ -80,9 +80,9 @@ class Mod(object):
         try:
             await self.bot.kick(member)
         except discord.Forbidden:
-            await self.bot.say("bot ain't got perms yo")
+            await self.bot.say('bot ain\'t got perms yo')
         except discord.HTTPException:
-            await self.bot.say("fgt didn't get kicked")
+            await self.bot.say('fgt didn\'t get kicked')
         except AttributeError:
             await self.bot.say('which fgt to kick??')
         else:
@@ -93,13 +93,13 @@ class Mod(object):
     async def serverprefix(self, ctx, prefix='.'):
         log = self.bot.log
         if prefix is '.':
-            del log["prefixes"][ctx.message.server.id]
-            await self.bot.say("resetting prefix")
+            del log['prefixes'][ctx.message.server.id]
+            await self.bot.say('resetting prefix')
         else:
-            log["prefixes"][ctx.message.server.id] = prefix
-        with open("log.json", "w") as file:
+            log['prefixes'][ctx.message.server.id] = prefix
+        with open('log.json', 'w') as file:
             json.dump(log, file, indent=4)
-        await self.bot.say("changing server prefix to %s" % prefix)
+        await self.bot.say('changing server prefix to %s' % prefix)
 
 
 def setup(bot):

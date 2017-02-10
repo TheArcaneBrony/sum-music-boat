@@ -39,7 +39,7 @@ class SMod(object):
     @checks()
     async def sclear(self):
         try:
-            await self.bot.say("\0\n" * 1000)
+            await self.bot.say('\0\n' * 1000)
         except:
             pass
 

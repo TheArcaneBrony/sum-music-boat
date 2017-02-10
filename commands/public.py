@@ -63,11 +63,10 @@ def r34(query):
     http = urllib3.PoolManager()
     request = http.request(
         'GET', 'http://cloud.rule34.xxx/index.php?page=dapi&s=post&q=index&tags={}&limit=1000'.format(query)).data.decode()
-    links = [i for i in re.findall(
-        'cloudimg\.rule34[^"]+', request) if 'thumbnails' not in i]
+    links = [i for i in re.findall('cloudimg\.rule34[^"]+', request) if 'thumbnails' not in i]
     if len(links) > 0:
         return 'http://' + random.choice(links)
-    return "couldn't match the query"
+    return 'couldn\'t match the query'
 
 
 class Public:
@@ -92,34 +91,34 @@ class Public:
                 'http://ip-api.com/json/{}'.format(ip), allow_redirects=True).json()
 
             data = discord.Embed(
-                description="Information about this IP",
-                color=discord.Color(value="16727871")
+                description='Information about this IP',
+                color=discord.Color(value='16727871')
             )
 
             r = {key: str(val) for key, val in r.items()}
 
-            data.add_field(name="Country", value=r['country'])
-            data.add_field(name="City", value=r['city'])
-            data.add_field(name="Zipcode", value=r['zip'])
-            data.add_field(name="Region", value=r['region'])
-            data.add_field(name="Timezone", value=r['timezone'])
-            data.add_field(name="Latitude", value=r['lat'])
-            data.add_field(name="Longitude", value=r['lon'])
-            data.add_field(name="ISP", value=r['isp'])
-            data.add_field(name="Org", value=r['org'])
+            data.add_field(name='Country', value=r['country'])
+            data.add_field(name='City', value=r['city'])
+            data.add_field(name='Zipcode', value=r['zip'])
+            data.add_field(name='Region', value=r['region'])
+            data.add_field(name='Timezone', value=r['timezone'])
+            data.add_field(name='Latitude', value=r['lat'])
+            data.add_field(name='Longitude', value=r['lon'])
+            data.add_field(name='ISP', value=r['isp'])
+            data.add_field(name='Org', value=r['org'])
 
-            data.set_author(name=ip, url="http://ip-api.com/{}".format(ip))
+            data.set_author(name=ip, url='http://ip-api.com/{}'.format(ip))
 
             try:
                 await self.bot.say(embed=data)
             except discord.HTTPException:
-                await self.bot.say("I need to be able to send embedded links")
+                await self.bot.say('I need to be able to send embedded links')
         else:
-            await self.bot.say("you dumb or wat, is that an ip?")
+            await self.bot.say('you dumb or wat, is that an ip?')
 
     @commands.command(pass_context=True)
     async def discrim(self, ctx, member: discord.Member = None):
-        """Finds a username that you can use to change discrim"""
+        '''Finds a username that you can use to change discrim'''
 
         d = ctx.message.author if member is None else member
         f = discord.utils.find(lambda x: x.discriminator == d.discriminator and not x.id == d.id,
@@ -148,16 +147,16 @@ class Public:
             definition = r['list'][0]['definition']
             example = r['list'][0]['example']
 
-            data = discord.Embed(colour=discord.Colour(value="16727871"))
+            data = discord.Embed(colour=discord.Colour(value='16727871'))
 
-            data.add_field(name="Definition", value=str(definition), inline=False)
-            data.add_field(name="Example", value=str(example))
-            data.set_footer(text="Definition from Urban Dictionary", icon_url="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRo8KLHlAQXYao2X7D1G5rFS03GUG59KMNOP22RYHPqvmmBHREKctHRog")
+            data.add_field(name='Definition', value=str(definition), inline=False)
+            data.add_field(name='Example', value=str(example))
+            data.set_footer(text='Definition from Urban Dictionary', icon_url='https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRo8KLHlAQXYao2X7D1G5rFS03GUG59KMNOP22RYHPqvmmBHREKctHRog')
 
             try:
                 await self.bot.say(embed=data)
             except discord.HTTPException:
-                await self.bot.say("I need to be able to send embedded links")
+                await self.bot.say('I need to be able to send embedded links')
         except:
             await self.bot.say('no definition found for this word')
 
@@ -185,15 +184,15 @@ class Public:
             await self.bot.say('did you just try to eval bomb me u dickhead')
         else:
             try:
-                data = discord.Embed(colour=discord.Colour(value="16727871"))
+                data = discord.Embed(colour=discord.Colour(value='16727871'))
 
-                data.add_field(name="Input", value=str(args), inline=False)
-                data.add_field(name="Output", value=str(eval(args)))
+                data.add_field(name='Input', value=str(args), inline=False)
+                data.add_field(name='Output', value=str(eval(args)))
 
                 try:
                     await self.bot.say(embed=data)
                 except discord.HTTPException:
-                    await self.bot.say("I need to be able to send embedded links")
+                    await self.bot.say('I need to be able to send embedded links')
             except SyntaxError:
                 await self.bot.say('wtf did you enter??')
 
@@ -207,20 +206,20 @@ class Public:
         text_channels = len([x for x in server.channels
                              if x.type == discord.ChannelType.text])
         voice_channels = len(server.channels) - text_channels
-        created_at = server.created_at.strftime("%d %b %Y %H:%M")
+        created_at = server.created_at.strftime('%d %b %Y %H:%M')
 
         data = discord.Embed(
-            description="Server ID: " + server.id,
-            colour=discord.Colour(value="16727871"))
-        data.add_field(name="Region", value=str(server.region))
-        data.add_field(name="Users online",
-                       value="{}/{}".format(online, total_users))
-        data.add_field(name="Total Text Channels", value=str(text_channels))
-        data.add_field(name="Total Voice Channels", value=str(voice_channels))
-        data.add_field(name="Roles", value=str(
-            len([i.name for i in server.roles if i.name != "@everyone"])))
-        data.add_field(name="Owner", value=str(server.owner))
-        data.add_field(name="Created at", value=created_at)
+            description='Server ID: ' + server.id,
+            colour=discord.Colour(value='16727871'))
+        data.add_field(name='Region', value=str(server.region))
+        data.add_field(name='Users online',
+                       value='{}/{}'.format(online, total_users))
+        data.add_field(name='Total Text Channels', value=str(text_channels))
+        data.add_field(name='Total Voice Channels', value=str(voice_channels))
+        data.add_field(name='Roles', value=str(
+            len([i.name for i in server.roles if i.name != '@everyone'])))
+        data.add_field(name='Owner', value=str(server.owner))
+        data.add_field(name='Created at', value=created_at)
 
         if server.icon_url:
             data.set_author(name=server.name, url=server.icon_url)
@@ -231,7 +230,7 @@ class Public:
         try:
             await self.bot.say(embed=data)
         except discord.HTTPException:
-            await self.bot.say("I need to be able to send embedded links")
+            await self.bot.say('I need to be able to send embedded links')
 
     @commands.command(pass_context=True)
     async def userinfo(self, ctx, member: discord.Member = None):
@@ -244,21 +243,21 @@ class Public:
         game = member.game if member.game else None
         nick = member.nick
         id = member.id
-        created_at = "{}".format(member.created_at.strftime("%d %b %Y %H:%M"))
-        joined_at = "{}".format(member.joined_at.strftime("%d %b %Y %H:%M"))
-        roles = ', '.join([i.name for i in member.roles if i.name != "@everyone"]) if not len(member.roles) < 2 else None
+        created_at = '{}'.format(member.created_at.strftime('%d %b %Y %H:%M'))
+        joined_at = '{}'.format(member.joined_at.strftime('%d %b %Y %H:%M'))
+        roles = ', '.join([i.name for i in member.roles if i.name != '@everyone']) if not len(member.roles) < 2 else None
 
         data = discord.Embed(
-            description="User ID: " + id,
-            colour=discord.Color(value="16727871")
+            description='User ID: ' + id,
+            colour=discord.Color(value='16727871')
         )
 
-        data.add_field(name="Discriminator", value=discriminator)
-        data.add_field(name="Nickname", value=nick)
-        data.add_field(name="Playing or streaming", value=game)
-        data.add_field(name="Account created at", value=created_at)
-        data.add_field(name="Joined this server at", value=joined_at)
-        data.add_field(name="Roles", value=roles, inline=False)
+        data.add_field(name='Discriminator', value=discriminator)
+        data.add_field(name='Nickname', value=nick)
+        data.add_field(name='Playing or streaming', value=game)
+        data.add_field(name='Account created at', value=created_at)
+        data.add_field(name='Joined this server at', value=joined_at)
+        data.add_field(name='Roles', value=roles, inline=False)
 
         if member.avatar_url:
             data.set_author(name=name, url=member.avatar_url)
@@ -269,23 +268,23 @@ class Public:
         try:
             await self.bot.say(embed=data)
         except discord.HTTPException:
-            await self.bot.say("I need to be able to send embedded links")
+            await self.bot.say('I need to be able to send embedded links')
 
     @commands.command()
     async def invite(self):
-        data = discord.Embed(colour=discord.Color(value="16727871"))
+        data = discord.Embed(colour=discord.Color(value='16727871'))
 
-        data.add_field(name="Invite me here", value="https://discordapp.com/oauth2/authorize?client_id=232916519594491906&scope=bot&permissions=536063039")
-        data.add_field(name="My server", value="https://discord.gg/b9RCGvk")
+        data.add_field(name='Invite me here', value='https://discordapp.com/oauth2/authorize?client_id=232916519594491906&scope=bot&permissions=536063039')
+        data.add_field(name='My server', value='https://discord.gg/b9RCGvk')
         await self.bot.say(embed=data)
 
     @commands.command()
-    @channel_check("nsfw")
+    @channel_check('nsfw')
     async def nudes(self):
         await self.bot.say(random.choice(NUDES))
 
     @commands.command(pass_context=True)
-    @channel_check("nsfw")
+    @channel_check('nsfw')
     async def rule34(self, ctx, *, term):
         future = await self.bot.loop.run_in_executor(None, r34, term.replace(' ', '_'))
         await self.bot.say(future)
