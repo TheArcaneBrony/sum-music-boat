@@ -161,7 +161,7 @@ class Bot(commands.Bot):
             output = str_split(traceback_msg)
             for out in output:
                 await self.send_message(channel, out)
-            await self.send_message(channel, 'Origin: {}'.format(ctx.message.server))
+            await self.send_message(channel, 'Origin: {}\nCaused by: {}'.format(ctx.message.server, ctx.message.content))
 
     def get_cfg(self):
         return self.proxy.get_cfg()
