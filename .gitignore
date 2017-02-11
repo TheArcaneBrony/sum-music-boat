@@ -1,3 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -66,7 +68,7 @@ docs/_build/
 # PyBuilder
 target/
 
-# IPython Notebook
+# Jupyter Notebook
 .ipynb_checkpoints
 
 # pyenv
@@ -79,6 +81,7 @@ celerybeat-schedule
 .env
 
 # virtualenv
+.venv/
 venv/
 ENV/
 
@@ -88,10 +91,11 @@ ENV/
 # Rope project settings
 .ropeproject
 
-run_shards.py
-/delete.sh
-.idea
+.idea/
 cache/
+commands/__pycache__/
+commands/music/__pycache__/
+delete.sh
 install.sh
-log.json
-/main.py
+run_shards.py
+utils/__pycache__/

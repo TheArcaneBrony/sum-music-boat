@@ -14,9 +14,8 @@ class VoiceEntry:
 
     def __str__(self):
         fmt = '**{0.title}** uploaded by {0.uploader} and requested by {1.display_name}'
-        duration = self.player.duration
-        if duration:
-            fmt += ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
+        if self.player.fmt_duration:
+            fmt += ' [length: {}]'.format(self.player.fmt_duration)
         return fmt.format(self.player, self.requester)
 
     def embed(self):
@@ -28,8 +27,7 @@ class VoiceEntry:
         data.add_field(name='Uploaded by', value=self.player.uploader)
         data.add_field(name='Requested by', value=self.requester.display_name)
         if duration:
-            data.add_field(name='Duration', value='{0[0]}m {0[1]}s'.format(
-                divmod(duration, 60)))
+            data.add_field(name='Duration', value=self.player.fmt_duration)
         data.set_author(name=self.player.title, url=self.player.webpage_url)
         data.set_thumbnail(url=self.player.thumbnail)
         data.set_footer(
@@ -100,8 +98,7 @@ class VoiceState:
             self.current.player = await self.create_player()
             try:
                 if not self.stop:
-                    await self.bot.send_message(self.current.channel, 'Now playing')
-                    await self.bot.send_message(self.current.channel, embed=self.current.embed())
+                    await self.bot.send_message(self.current.channel, 'Now playing', embed=self.current.embed())
             except discord.HTTPException:
                 try:
                     await self.bot.send_message(self.current.channel, embed=self.current)
@@ -138,6 +135,7 @@ class VoiceState:
         player.likes = entry.player.likes
         player.dislikes = entry.player.dislikes
         player.duration = entry.player.duration
+        player.fmt_duration = entry.player.fmt_duration
         player.uploader = entry.player.uploader
 
         return player

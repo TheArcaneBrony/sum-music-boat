@@ -26,6 +26,7 @@ class Extract:
         self.likes = None
         self.dislikes = None
         self.duration = None
+        self.fmt_duration = None
         self.uploader = None
         self.description = None
 
@@ -85,6 +86,7 @@ async def extract(url, loop, in_playlist, shuffle=False, thread_pool=None):
             extract_obj.likes = i.get('like_count')
             extract_obj.dislikes = i.get('dislike_count')
             extract_obj.duration = i.get('duration')
+            extract_obj.fmt_duration = "{0[0]}m {0[1]}s".format(divmod(extract_obj.duration, 60))
             extract_obj.uploader = i.get('uploader')
 
             is_twitch = 'twitch' in url

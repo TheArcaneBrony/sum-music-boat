@@ -109,7 +109,7 @@ class Bot(commands.Bot):
             msg = msg.replace('<@232916519594491906>', 'hime')
         if 'hime' in msg:
             if message.author.id not in self.instances.keys():
-                future = self.loop.run_in_executor(None, partial(Cleverbot, 'himebot'))
+                future = self.loop.run_in_executor(self.thread_pool, partial(Cleverbot))
                 self.instances[message.author.id] = await future
 
             question = msg.split(' ', 1)[1] if msg.startswith('hime') else msg
@@ -156,7 +156,7 @@ class Bot(commands.Bot):
 
         channel = discord.utils.get(self.get_all_channels(), id='232190536231026688')
         if channel is not None:
-            traceback_msg = ''''''.join(
+            traceback_msg = ''.join(
                 traceback.format_exception(error.__class__.__name__, error, error.__traceback__))
             output = str_split(traceback_msg)
             for out in output:

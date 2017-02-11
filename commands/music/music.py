@@ -335,11 +335,15 @@ class Music:
             return
         for i in state.songlist:
             data.add_field(name='{}. {}'.format(state.songlist.index(
-                i) + 1, i.player.title), value='Duration: {}'.format(i.player.duration), inline=False)
+                i) + 1, i.player.title), value='Duration: {}'.format(i.player.fmt_duration), inline=False)
         try:
             await self.bot.say(embed=data)
         except discord.HTTPException:
             await self.bot.say('I need to be able to send embedded links')
+
+    @commands.command()
+    async def volume(self):
+        await self.bot.say('disabled due to resource use, right click on hime in a voice channel and change her volume there instead')
 
 
 def setup(bot):
